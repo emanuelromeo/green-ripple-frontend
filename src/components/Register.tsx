@@ -66,6 +66,8 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        city: formData.city,
+        carType: formData.carType,
       });
       navigate("/login");
     } catch (err) {

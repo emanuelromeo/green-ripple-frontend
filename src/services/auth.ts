@@ -13,6 +13,8 @@ export interface RegisterUserDto {
   name: string;
   email: string;
   password: string;
+  city: string;
+  carType: string;
 }
 
 export interface LoginResponse {
