@@ -15,11 +15,9 @@ import ProjectsList from "./ProjectsList";
 import { userApi, projectApi, userProjectApi } from "../services/api";
 import { User, Project, UserProject } from "../types/api";
 
-interface DashboardProps {
-  userId?: number;
-}
+interface DashboardProps {}
 
-const Dashboard = ({ userId = 1 }: DashboardProps) => {
+const Dashboard = ({}: DashboardProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
@@ -30,7 +28,7 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userData = await userApi.getUserById(userId);
+        const userData = await userApi.getCurrentUser();
         setUser(userData);
       } catch (err) {
         setError("Failed to load user data");
@@ -39,7 +37,7 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
     };
 
     fetchUserData();
-  }, [userId]);
+  }, []);
 
   // Fetch projects data
   useEffect(() => {
@@ -60,7 +58,7 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
   useEffect(() => {
     const fetchUserProjects = async () => {
       try {
-        const userProjectsData = await userProjectApi.getUserProjects(userId);
+        const userProjectsData = await userProjectApi.getUserProjects();
         setUserProjects(userProjectsData);
         setLoading(false);
       } catch (err) {
@@ -71,7 +69,7 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
     };
 
     fetchUserProjects();
-  }, [userId]);
+  }, []);
 
   // Function to handle voting for a project
   const handleVote = async (projectId: number) => {
@@ -83,10 +81,10 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
       if (alreadyVoted) return;
 
       // Call API to vote for the project
-      await userProjectApi.voteProject(userId, projectId);
+      await userProjectApi.voteProject(projectId);
 
       // Refresh user projects
-      const updatedUserProjects = await userProjectApi.getUserProjects(userId);
+      const updatedUserProjects = await userProjectApi.getUserProjects();
       setUserProjects(updatedUserProjects);
 
       // Refresh projects to get updated vote count
@@ -94,7 +92,7 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
       setProjects(updatedProjects);
 
       // Refresh user data to get updated green points and votes
-      const updatedUser = await userApi.getUserById(userId);
+      const updatedUser = await userApi.getCurrentUser();
       setUser(updatedUser);
     } catch (err) {
       setError("Failed to vote for project");

@@ -22,26 +22,25 @@ import { User, Project, UserProject } from "../types/api";
 
 interface UserProfileProps {
   user?: User;
-  userId?: number;
 }
 
-const UserProfile = ({ user, userId }: UserProfileProps) => {
+const UserProfile = ({ user }: UserProfileProps) => {
   const [votedProjects, setVotedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user's voted projects if userId is provided and user doesn't have votedProjects
+  // Fetch user's voted projects if user doesn't have votedProjects
   useEffect(() => {
     const fetchVotedProjects = async () => {
       setLoading(true);
       try {
         // Get user's voted projects
-        const userProjects = await userProjectApi.getUserProjects(userId);
+        const userProjects = await userProjectApi.getUserProjects();
 
         // Fetch details for each project
         const projectDetails = await Promise.all(
           userProjects.map(async (up: UserProject) => {
-            const project = await projectApi.getProjectById(up.projectId);
+            const project = up.project;
             return {
               ...project,
               votedAt: up.votedAt,
@@ -59,7 +58,7 @@ const UserProfile = ({ user, userId }: UserProfileProps) => {
     };
 
     fetchVotedProjects();
-  }, [userId, user]);
+  }, [user]);
 
   // If no user is provided, show a loading state
   if (!user && loading) {

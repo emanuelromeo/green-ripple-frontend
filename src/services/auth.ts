@@ -25,25 +25,10 @@ const TOKEN_KEY = "auth_token";
 const USER_KEY = "current_user";
 const TOKEN_EXPIRY_KEY = "token_expiry";
 
-// Mock user data for development without backend
-const MOCK_USER: User = {
-  id: 1,
-  name: "John Doe",
-  email: "john@example.com",
-  city: "New York",
-  carType: "ELECTRIC",
-  greenPoints: 120,
-  votes: 5,
-};
-
-// Mock token expiration (24 hours from now)
-const MOCK_TOKEN_EXPIRY = Date.now() + 24 * 60 * 60 * 1000;
-
 export const authService = {
   // Login user and store token
   login: async (credentials: LoginUserDto): Promise<User> => {
     try {
-      // Real API call for production
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -89,7 +74,6 @@ export const authService = {
   // Register a new user
   register: async (userData: RegisterUserDto): Promise<User> => {
     try {
-      // Real API call for production
       const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
         headers: {

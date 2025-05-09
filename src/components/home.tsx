@@ -7,31 +7,39 @@ import UserProfile from "./UserProfile";
 import ProjectsList from "./ProjectsList";
 import ProjectAdmin from "./ProjectAdmin";
 import { Leaf } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import { userApi, projectApi, userProjectApi } from "../services/api";
 import { User, Project, UserProject } from "../types/api";
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const userId = 1; // Default user ID
+  const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
 
   // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
-      try {
-        const userData = await userApi.getUserById(userId);
-        setUser(userData);
-      } catch (err) {
-        console.error("Failed to load user data:", err);
-        // Continue with default user if API fails
+      if (isAuthenticated) {
+        try {
+          console.log("Fetching current user data");
+          const userData = await userApi.getCurrentUser();
+          setUserDetails(userData);
+        } catch (err) {
+          console.error("Failed to load user data:", err);
+          // If API fails but we have user from auth context, use that
+          if (user) {
+            setUserDetails(user);
+          }
+        }
       }
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [isAuthenticated, user]);
 
   // Fetch projects data
   useEffect(() => {
@@ -51,8 +59,14 @@ export default function Home() {
   // Fetch user's voted projects
   useEffect(() => {
     const fetchUserProjects = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const userProjectsData = await userProjectApi.getUserProjects(userId);
+        console.log("Fetching user projects");
+        const userProjectsData = await userProjectApi.getUserProjects();
         setUserProjects(userProjectsData);
       } catch (err) {
         console.error("Failed to load user projects:", err);
@@ -63,10 +77,15 @@ export default function Home() {
     };
 
     fetchUserProjects();
-  }, [userId]);
+  }, [isAuthenticated]);
 
   // Function to handle voting for a project
   const handleVote = async (projectId: number) => {
+    if (!isAuthenticated) {
+      setError("You must be logged in to vote");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
     try {
       // Check if user has already voted for this project
       const alreadyVoted = userProjects.some(
@@ -95,7 +114,6 @@ export default function Home() {
       // Add to user's voted projects
       const newVote = {
         id: Date.now(), // Temporary ID
-        userId: userId,
         projectId: projectId,
         votedAt: new Date().toISOString(),
         project: projects.find((p) => p.id === projectId),
@@ -103,28 +121,28 @@ export default function Home() {
       setUserProjects([...userProjects, newVote]);
 
       // Optimistically update user's vote count
-      if (user) {
-        setUser({
-          ...user,
-          votes: user.votes + 1,
-          greenPoints: user.greenPoints + 10, // Assuming each vote gives 10 points
+      if (userDetails) {
+        setUserDetails({
+          ...userDetails,
+          votes: userDetails.votes + 1,
+          greenPoints: userDetails.greenPoints + 10, // Assuming each vote gives 10 points
         });
       }
 
       // Call API to vote for the project
-      await userProjectApi.voteProject(userId, projectId);
+      await userProjectApi.voteProject(projectId);
 
       // After successful API call, refresh data from server to ensure consistency
       const [updatedUserProjects, serverProjects, updatedUser] =
         await Promise.all([
-          userProjectApi.getUserProjects(userId),
+          userProjectApi.getUserProjects(),
           projectApi.getAllProjects(),
-          userApi.getUserById(userId),
+          userApi.getCurrentUser(),
         ]);
 
       setUserProjects(updatedUserProjects);
       setProjects(serverProjects);
-      setUser(updatedUser);
+      setUserDetails(updatedUser);
 
       // Show success message
       setError("Vote successfully cast!");
@@ -140,14 +158,14 @@ export default function Home() {
       try {
         const [updatedUserProjects, serverProjects, updatedUser] =
           await Promise.all([
-            userProjectApi.getUserProjects(userId),
+            userProjectApi.getUserProjects(),
             projectApi.getAllProjects(),
-            userApi.getUserById(userId),
+            userApi.getCurrentUser(),
           ]);
 
         setUserProjects(updatedUserProjects);
         setProjects(serverProjects);
-        setUser(updatedUser);
+        setUserDetails(updatedUser);
       } catch (refreshErr) {
         console.error("Failed to refresh data after error:", refreshErr);
       }
@@ -155,7 +173,7 @@ export default function Home() {
   };
 
   // Display user data or error message
-  const displayUser = user || {
+  const displayUser = userDetails || {
     id: 0,
     name: "User data unavailable",
     email: "No email available",
@@ -227,7 +245,7 @@ export default function Home() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="dashboard" className="p-6">
-                <Dashboard userId={userId} />
+                <Dashboard />
               </TabsContent>
               <TabsContent value="projects" className="p-6">
                 <ProjectsList
