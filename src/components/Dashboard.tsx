@@ -39,21 +39,6 @@ const Dashboard = ({}: DashboardProps) => {
     fetchUserData();
   }, []);
 
-  // Fetch projects data
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const projectsData = await projectApi.getAllProjects();
-        setProjects(projectsData);
-      } catch (err) {
-        setError("Failed to load projects");
-        console.error(err);
-      }
-    };
-
-    fetchProjects();
-  }, []);
-
   // Fetch user's voted projects
   useEffect(() => {
     const fetchUserProjects = async () => {
@@ -143,7 +128,7 @@ const Dashboard = ({}: DashboardProps) => {
               <span className="font-medium">{displayUser.name}</span>
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="bg-green-700">
-                  {displayUser.greenPoints} Green Points
+                  {Math.floor(displayUser.greenPoints)} Green Points
                 </Badge>
               </div>
             </div>
@@ -165,26 +150,10 @@ const Dashboard = ({}: DashboardProps) => {
         <Card className="bg-white shadow-lg border-0">
           <CardHeader className="bg-green-50 border-b border-green-100">
             <CardTitle className="text-green-800">Dashboard</CardTitle>
-            <CardDescription>
-              View your profile and explore environmental projects
-            </CardDescription>
+            <CardDescription>View your profile statistics</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
-                <TabsTrigger
-                  value="profile"
-                  className="rounded-none data-[state=active]:bg-green-50"
-                >
-                  My Profile
-                </TabsTrigger>
-                <TabsTrigger
-                  value="projects"
-                  className="rounded-none data-[state=active]:bg-green-50"
-                >
-                  Projects
-                </TabsTrigger>
-              </TabsList>
               <div className="p-4">
                 <TabsContent value="profile">
                   <UserProfile user={displayUser} />

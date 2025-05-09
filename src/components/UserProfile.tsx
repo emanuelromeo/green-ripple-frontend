@@ -152,7 +152,7 @@ const UserProfile = ({ user }: UserProfileProps) => {
                   Green Points
                 </p>
                 <p className="text-3xl font-bold text-green-600">
-                  {displayUser.greenPoints}
+                  {Math.floor(displayUser.greenPoints)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Earned through eco-friendly actions
@@ -160,13 +160,13 @@ const UserProfile = ({ user }: UserProfileProps) => {
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm font-medium text-muted-foreground">
-                  Projects Voted
+                  Votes Left
                 </p>
                 <p className="text-3xl font-bold text-blue-600">
-                  {displayUser.votes}
+                  {Math.floor(displayUser.votes)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Supporting environmental initiatives
+                  To vote environmental initiatives
                 </p>
               </div>
             </div>
