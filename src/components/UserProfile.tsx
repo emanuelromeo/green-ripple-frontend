@@ -33,8 +33,6 @@ const UserProfile = ({ user, userId }: UserProfileProps) => {
   // Fetch user's voted projects if userId is provided and user doesn't have votedProjects
   useEffect(() => {
     const fetchVotedProjects = async () => {
-      if (!userId || user?.votedProjects) return;
-
       setLoading(true);
       try {
         // Get user's voted projects
@@ -73,48 +71,19 @@ const UserProfile = ({ user, userId }: UserProfileProps) => {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
-  // Default user data if none is provided
-  const defaultUser = {
-    id: 1,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    city: "San Francisco",
-    carType: "ELECTRIC",
-    greenPoints: 350,
-    votes: 12,
-    votedProjects: [
-      {
-        id: 1,
-        name: "Community Solar Garden",
-        description: "Installing solar panels in community spaces",
-        requiredVotes: 500,
-        receivedVotes: 320,
-        votedAt: "2023-05-15T10:30:00Z",
-      },
-      {
-        id: 2,
-        name: "Urban Tree Planting",
-        description: "Planting 1000 trees across the city",
-        requiredVotes: 300,
-        receivedVotes: 300,
-        votedAt: "2023-06-22T14:45:00Z",
-      },
-      {
-        id: 3,
-        name: "Plastic-Free Waterways",
-        description: "Cleaning plastic waste from local rivers",
-        requiredVotes: 250,
-        receivedVotes: 180,
-        votedAt: "2023-07-10T09:15:00Z",
-      },
-    ],
+  // Display user data or error message
+  const displayUser = user || {
+    id: 0,
+    name: "User data unavailable",
+    email: "No email available",
+    city: "No city available",
+    carType: "UNKNOWN",
+    greenPoints: 0,
+    votes: 0,
+    votedProjects: [],
   };
 
-  const displayUser = user || defaultUser;
-  const projectsToDisplay =
-    user?.votedProjects || votedProjects.length > 0
-      ? votedProjects
-      : defaultUser.votedProjects;
+  const projectsToDisplay = user?.votedProjects || votedProjects;
 
   return (
     <div className="w-full p-6 bg-white">

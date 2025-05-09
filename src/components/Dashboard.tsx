@@ -118,19 +118,17 @@ const Dashboard = ({ userId = 1 }: DashboardProps) => {
     );
   }
 
-  // Fallback user data if API fails
-  const fallbackUser = {
-    id: 1,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    city: "Green City",
-    carType: "ELECTRIC",
-    greenPoints: 250.5,
-    votes: 15.0,
+  // Display user data or error message
+  const displayUser = user || {
+    id: 0,
+    name: "User data unavailable",
+    email: "No email available",
+    city: "No city available",
+    carType: "UNKNOWN",
+    greenPoints: 0,
+    votes: 0,
     votedProjects: [],
   };
-
-  const displayUser = user || fallbackUser;
 
   return (
     <div className="bg-white min-h-screen">

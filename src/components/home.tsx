@@ -79,19 +79,51 @@ export default function Home() {
         return;
       }
 
+      // Optimistically update the UI
+      // Find the project and increment its vote count
+      const updatedProjects = projects.map((project) => {
+        if (project.id === projectId) {
+          return {
+            ...project,
+            receivedVotes: project.receivedVotes + 1,
+          };
+        }
+        return project;
+      });
+      setProjects(updatedProjects);
+
+      // Add to user's voted projects
+      const newVote = {
+        id: Date.now(), // Temporary ID
+        userId: userId,
+        projectId: projectId,
+        votedAt: new Date().toISOString(),
+        project: projects.find((p) => p.id === projectId),
+      };
+      setUserProjects([...userProjects, newVote]);
+
+      // Optimistically update user's vote count
+      if (user) {
+        setUser({
+          ...user,
+          votes: user.votes + 1,
+          greenPoints: user.greenPoints + 10, // Assuming each vote gives 10 points
+        });
+      }
+
       // Call API to vote for the project
       await userProjectApi.voteProject(userId, projectId);
 
-      // Refresh user projects
-      const updatedUserProjects = await userProjectApi.getUserProjects(userId);
+      // After successful API call, refresh data from server to ensure consistency
+      const [updatedUserProjects, serverProjects, updatedUser] =
+        await Promise.all([
+          userProjectApi.getUserProjects(userId),
+          projectApi.getAllProjects(),
+          userApi.getUserById(userId),
+        ]);
+
       setUserProjects(updatedUserProjects);
-
-      // Refresh projects to get updated vote count
-      const updatedProjects = await projectApi.getAllProjects();
-      setProjects(updatedProjects);
-
-      // Refresh user data to get updated green points and votes
-      const updatedUser = await userApi.getUserById(userId);
+      setProjects(serverProjects);
       setUser(updatedUser);
 
       // Show success message
@@ -103,22 +135,36 @@ export default function Home() {
       console.error(err);
       // Clear error after 5 seconds
       setTimeout(() => setError(null), 5000);
+
+      // Refresh data from server to revert any optimistic updates
+      try {
+        const [updatedUserProjects, serverProjects, updatedUser] =
+          await Promise.all([
+            userProjectApi.getUserProjects(userId),
+            projectApi.getAllProjects(),
+            userApi.getUserById(userId),
+          ]);
+
+        setUserProjects(updatedUserProjects);
+        setProjects(serverProjects);
+        setUser(updatedUser);
+      } catch (refreshErr) {
+        console.error("Failed to refresh data after error:", refreshErr);
+      }
     }
   };
 
-  // Default user data if API fails
-  const defaultUser = {
-    id: 1,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    city: "Green City",
-    carType: "ELECTRIC",
-    greenPoints: 250,
-    votes: 5,
+  // Display user data or error message
+  const displayUser = user || {
+    id: 0,
+    name: "User data unavailable",
+    email: "No email available",
+    city: "No city available",
+    carType: "UNKNOWN",
+    greenPoints: 0,
+    votes: 0,
     votedProjects: [],
   };
-
-  const displayUser = user || defaultUser;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 p-4 md:p-8">
@@ -160,18 +206,12 @@ export default function Home() {
         <Card className="bg-white/80 backdrop-blur-sm border-green-100 shadow-md">
           <CardContent className="p-0">
             <Tabs defaultValue="dashboard" className="w-full">
-              <TabsList className="w-full grid grid-cols-4 bg-green-50 rounded-t-lg border-b border-green-100">
+              <TabsList className="w-full grid grid-cols-3 bg-green-50 rounded-t-lg border-b border-green-100">
                 <TabsTrigger
                   value="dashboard"
                   className="data-[state=active]:bg-white data-[state=active]:text-green-700"
                 >
                   Dashboard
-                </TabsTrigger>
-                <TabsTrigger
-                  value="profile"
-                  className="data-[state=active]:bg-white data-[state=active]:text-green-700"
-                >
-                  My Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="projects"
@@ -188,9 +228,6 @@ export default function Home() {
               </TabsList>
               <TabsContent value="dashboard" className="p-6">
                 <Dashboard userId={userId} />
-              </TabsContent>
-              <TabsContent value="profile" className="p-6">
-                <UserProfile user={displayUser} userId={userId} />
               </TabsContent>
               <TabsContent value="projects" className="p-6">
                 <ProjectsList

@@ -89,77 +89,18 @@ const ProjectsList = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data for projects
-  const mockProjects: Project[] = [
-    {
-      id: 1,
-      name: "Urban Tree Planting Initiative",
-      description:
-        "Planting 1000 trees across the city to improve air quality and create green spaces.",
-      requiredVotes: 500,
-      receivedVotes: 320,
-    },
-    {
-      id: 2,
-      name: "Community Solar Panel Installation",
-      description:
-        "Installing solar panels on community buildings to reduce carbon footprint and energy costs.",
-      requiredVotes: 750,
-      receivedVotes: 412,
-    },
-    {
-      id: 3,
-      name: "Plastic-Free Waterways Campaign",
-      description:
-        "Cleaning local rivers and implementing measures to prevent plastic pollution.",
-      requiredVotes: 300,
-      receivedVotes: 298,
-    },
-    {
-      id: 4,
-      name: "Sustainable Transportation Network",
-      description:
-        "Creating bike lanes and electric vehicle charging stations throughout the city.",
-      requiredVotes: 600,
-      receivedVotes: 245,
-    },
-    {
-      id: 5,
-      name: "Urban Farming Education Center",
-      description:
-        "Building a center to teach sustainable farming practices in urban environments.",
-      requiredVotes: 400,
-      receivedVotes: 187,
-    },
-    {
-      id: 6,
-      name: "Zero-Waste School Program",
-      description:
-        "Implementing comprehensive recycling and composting systems in local schools.",
-      requiredVotes: 350,
-      receivedVotes: 210,
-    },
-  ];
-
   // Fetch projects from API
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const projectsData = await projectApi.getAllProjects();
-        if (projectsData && projectsData.length > 0) {
-          setProjects(projectsData);
-        } else {
-          // If no projects returned or empty array, use mock data
-          console.log("No projects returned from API, using mock data");
-          setProjects(mockProjects);
-        }
+        setProjects(projectsData || []);
         setLoading(false);
       } catch (err) {
         setError("Failed to load projects");
         console.error(err);
         setLoading(false);
-        // Use mock data on error
-        setProjects(mockProjects);
+        setProjects([]);
       }
     };
 
@@ -225,10 +166,17 @@ const ProjectsList = ({
       </div>
 
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-gray-50 rounded-md p-8">
           <p className="text-lg text-gray-500">
-            No projects found matching your search.
+            {searchTerm
+              ? "No projects found matching your search."
+              : "No projects available at the moment."}
           </p>
+          {!searchTerm && (
+            <p className="text-gray-500 text-sm mt-2">
+              Check back later for new environmental initiatives.
+            </p>
+          )}
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
